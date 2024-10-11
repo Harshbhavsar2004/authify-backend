@@ -19,7 +19,7 @@ export const registerDeveloper = async (req, res) => {
 };
 
 export const registerUser = async (req, res) => {
-    const { email, password, apiKey } = req.body;
+    const { email, password, apiKey, tokenExpiry = '1h' } = req.body;
 
     try {
         const developer = await Developer.findOne({ apiKey });
@@ -31,7 +31,7 @@ export const registerUser = async (req, res) => {
         const user = new User({ email, password: hashedPassword, developer: developer._id });
         await user.save();
 
-        const token = jwt.sign({ userId: user._id }, apiKey, { expiresIn: '1h' });
+        const token = jwt.sign({ userId: user._id }, apiKey, { expiresIn: tokenExpiry });
         user.token = token;
         await user.save();
 
@@ -42,7 +42,7 @@ export const registerUser = async (req, res) => {
 };
 
 export const loginUser = async (req, res) => {
-    const { email, password, apiKey } = req.body;
+    const { email, password, apiKey, tokenExpiry = '1h' } = req.body;
 
     try {
         const user = await User.findOne({ email }).populate('developer');
@@ -50,7 +50,7 @@ export const loginUser = async (req, res) => {
             return res.status(401).send('Invalid email, password, or API Key.');
         }
 
-        const token = jwt.sign({ userId: user._id }, apiKey, { expiresIn: '1h' });
+        const token = jwt.sign({ userId: user._id }, apiKey, { expiresIn: tokenExpiry });
         user.token = token;
         await user.save();
 
